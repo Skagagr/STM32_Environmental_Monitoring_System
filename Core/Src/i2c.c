@@ -35,7 +35,10 @@ void MX_I2C1_Init(void)
   /* USER CODE END I2C1_Init 0 */
 
   /* USER CODE BEGIN I2C1_Init 1 */
-
+    __HAL_RCC_I2C1_FORCE_RESET();
+    HAL_Delay(10);
+    __HAL_RCC_I2C1_RELEASE_RESET();
+    HAL_Delay(10);
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
   hi2c1.Init.ClockSpeed = 100000;

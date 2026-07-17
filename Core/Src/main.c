@@ -20,17 +20,21 @@
 #include "main.h"
 #include "i2c.h"
 #include "spi.h"
+#include "stm32f1xx_hal.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "oled.h"
+#include "sht30.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+static I2C_Bus_Ctx i2c1_ctx;
+static OLED_Ctx oled_ctx;
+static SHT30_Ctx sht30_ctx;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -67,47 +71,59 @@ void SystemClock_Config(void);
 int main(void)
 {
 
-  /* USER CODE BEGIN 1 */
+    /* USER CODE BEGIN 1 */
+    float temp, humi;
+    /* USER CODE END 1 */
 
-  /* USER CODE END 1 */
+    /* MCU Configuration--------------------------------------------------------*/
 
-  /* MCU Configuration--------------------------------------------------------*/
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    HAL_Init();
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+    /* USER CODE BEGIN Init */
 
-  /* USER CODE BEGIN Init */
+    /* USER CODE END Init */
 
-  /* USER CODE END Init */
+    /* Configure the system clock */
+    SystemClock_Config();
 
-  /* Configure the system clock */
-  SystemClock_Config();
+    /* USER CODE BEGIN SysInit */
 
-  /* USER CODE BEGIN SysInit */
+    /* USER CODE END SysInit */
 
-  /* USER CODE END SysInit */
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_I2C1_Init();
+    MX_USART1_UART_Init();
+    MX_SPI1_Init();
+    /* USER CODE BEGIN 2 */
+    I2C_Bus_Init(&i2c1_ctx, &hi2c1);
+    OLED_Init(&oled_ctx, &i2c1_ctx);
+    SHT30_Init(&sht30_ctx, &i2c1_ctx);
+    /* USER CODE END 2 */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_I2C1_Init();
-  MX_USART1_UART_Init();
-  MX_SPI1_Init();
-  /* USER CODE BEGIN 2 */
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+    /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
     while (1)
     {
-        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
         HAL_Delay(1000);
+
+        SHT30_Read(&sht30_ctx, &temp, &humi);
+
+        OLED_Clear(&oled_ctx);
+        
+        OLED_ShowNum(&oled_ctx, 0, 0, HAL_GetTick(), 0);
+
+        OLED_ShowFloat(&oled_ctx, 0, 32, temp, 2);
+        OLED_ShowFloat(&oled_ctx, 0, 48, humi, 2);
+        
+        OLED_Refresh(&oled_ctx);
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
     }
-  /* USER CODE END 3 */
+    /* USER CODE END 3 */
 }
 
 /**

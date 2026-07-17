@@ -32,7 +32,8 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 enable_language(C ASM)
 
 # Create an executable object type
-add_executable(${CMAKE_PROJECT_NAME})
+add_executable(${CMAKE_PROJECT_NAME}
+)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
@@ -42,14 +43,42 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined library search paths
 )
 
-# Add sources to executable
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
+# ============================================================
+# 自动识别用户源文件 (.c)
+# CONFIGURE_DEPENDS: 每次构建前检查文件列表是否变化,
+#                     若新增/删除了 .c 文件会自动触发重新 configure,
+#                     避免"新加文件却没编译进去"的坑
+# 注意: 这里只扫描自己新建的驱动目录,不扫描整个 Drivers,
+#       避免误把 CMSIS / HAL 库的源文件重复扫入导致重复编译
+# ============================================================
+file(GLOB_RECURSE USER_SOURCES
+    CONFIGURE_DEPENDS
+        Drivers/Bus/I2C/*.c      # 自己写的 I2C 驱动
+        Drivers/BSP/OLED/*.c     # 自己写的 OLED 驱动
+        Drivers/BSP/SHT30/*.c    # 自己写的 SHT30 温湿度传感器驱动
 )
 
-# Add include paths
+# ============================================================
+# 将上面自动识别到的 .c 源文件加入编译目标
+# 后续在 Drivers/I2C、OLED、SHT30 目录下新增 .c 文件
+# 会被自动扫描到,无需手动修改此处
+# ============================================================
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+    # Add user sources here
+    ${USER_SOURCES}
+)
+
+# ============================================================
+# 添加自定义头文件搜索路径 (.h)
+# 每新建一个驱动目录,需要在这里手动补一行,
+# 否则对应目录下的 .h 文件 #include 时会找不到
+# ============================================================
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
+    Core/Inc
+        Drivers/Bus/I2C
+        Drivers/BSP/OLED
+        Drivers/BSP/SHT30
 )
 
 # Add project symbols (macros)
@@ -63,6 +92,12 @@ list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
+        STM32_Drivers
 
     # Add user defined libraries
+)
+
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
+    -Wl,-Map=${CMAKE_PROJECT_NAME}.map
+    -u _printf_float        # ← 添加这行，开启 sprintf 浮点支持
 )

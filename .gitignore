@@ -44,3 +44,6 @@ build/
 *.orig
 .DS_Store
 Thumbs.db
+
+# JetBrains IDE (CLion)
+.idea/
