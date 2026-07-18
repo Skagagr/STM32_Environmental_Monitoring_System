@@ -20,7 +20,6 @@
 #include "main.h"
 #include "i2c.h"
 #include "spi.h"
-#include "stm32f1xx_hal.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -30,6 +29,7 @@
 #include "sht30.h"
 #include "led.h"
 #include "key.h"
+#include "flash_bsp.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,44 +73,53 @@ void SystemClock_Config(void);
 int main(void)
 {
 
-    /* USER CODE BEGIN 1 */
+  /* USER CODE BEGIN 1 */
     float temp, humi, temp_max = 35, humi_max = 70;
     static uint32_t oled_last_tick  = 0;
     uint32_t now_tick = 0;
     uint8_t key_state = 0;
 
-    /* USER CODE END 1 */
+    uint16_t test_write[2] = {0x1234, 0x5678};
+    uint16_t test_read[2] = {0};
 
-    /* MCU Configuration--------------------------------------------------------*/
+  /* USER CODE END 1 */
 
-    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-    HAL_Init();
+  /* MCU Configuration--------------------------------------------------------*/
 
-    /* USER CODE BEGIN Init */
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
 
-    /* USER CODE END Init */
+  /* USER CODE BEGIN Init */
 
-    /* Configure the system clock */
-    SystemClock_Config();
+  /* USER CODE END Init */
 
-    /* USER CODE BEGIN SysInit */
+  /* Configure the system clock */
+  SystemClock_Config();
 
-    /* USER CODE END SysInit */
+  /* USER CODE BEGIN SysInit */
 
-    /* Initialize all configured peripherals */
-    MX_GPIO_Init();
-    MX_I2C1_Init();
-    MX_USART1_UART_Init();
-    MX_SPI1_Init();
-    /* USER CODE BEGIN 2 */
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_I2C1_Init();
+  MX_USART1_UART_Init();
+  MX_SPI1_Init();
+  /* USER CODE BEGIN 2 */
     I2C_Bus_Init(&i2c1_ctx, &hi2c1);
     OLED_Init(&oled_ctx, &i2c1_ctx);
     SHT30_Init(&sht30_ctx, &i2c1_ctx);
 
-    /* USER CODE END 2 */
+    // 测试存储程序是否正常运行
+    Flash_BSP_ErasePage(FLASH_USER_PAGE_ADDR);
+    Flash_BSP_Write(FLASH_USER_PAGE_ADDR, test_write, 2);
+    Flash_BSP_Read(FLASH_USER_PAGE_ADDR, test_read, 2);
 
-    /* Infinite loop */
-    /* USER CODE BEGIN WHILE */
+    __NOP();   // 在这一行打断点，检查test_read的值
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
     while (1)
     {
         now_tick = HAL_GetTick();
@@ -156,7 +165,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     }
-    /* USER CODE END 3 */
+  /* USER CODE END 3 */
 }
 
 /**

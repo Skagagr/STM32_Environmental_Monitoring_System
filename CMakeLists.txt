@@ -54,6 +54,8 @@ file(GLOB_RECURSE USER_SOURCES
         Drivers/BSP/SHT30/*.c
         Drivers/BSP/LED/*.c
         Drivers/BSP/KEY/*.c
+        Drivers/BSP/FLASH/*.c
+        APP/Src/*.c
 )
 
 # 将上面自动识别到的 .c 源文件加入编译目标
@@ -73,6 +75,8 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         Drivers/BSP/SHT30
         Drivers/BSP/LED
         Drivers/BSP/KEY
+        Drivers/BSP/FLASH
+        APP/Inc
 )
 
 # Add project symbols (macros)
