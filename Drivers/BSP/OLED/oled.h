@@ -40,6 +40,7 @@
 
 #include "main.h"
 #include "i2c_bus.h"
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 

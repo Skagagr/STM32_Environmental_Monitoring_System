@@ -28,6 +28,8 @@
 /* USER CODE BEGIN Includes */
 #include "oled.h"
 #include "sht30.h"
+#include "led.h"
+#include "key.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -72,7 +74,11 @@ int main(void)
 {
 
     /* USER CODE BEGIN 1 */
-    float temp, humi;
+    float temp, humi, temp_max = 35, humi_max = 70;
+    static uint32_t oled_last_tick  = 0;
+    uint32_t now_tick = 0;
+    uint8_t key_state = 0;
+
     /* USER CODE END 1 */
 
     /* MCU Configuration--------------------------------------------------------*/
@@ -100,24 +106,51 @@ int main(void)
     I2C_Bus_Init(&i2c1_ctx, &hi2c1);
     OLED_Init(&oled_ctx, &i2c1_ctx);
     SHT30_Init(&sht30_ctx, &i2c1_ctx);
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1)
     {
-        HAL_Delay(1000);
+        now_tick = HAL_GetTick();
 
-        SHT30_Read(&sht30_ctx, &temp, &humi);
 
-        OLED_Clear(&oled_ctx);
-        
-        OLED_ShowNum(&oled_ctx, 0, 0, HAL_GetTick(), 0);
+        // 按键扫描(内部已消抖,直接调用即可)
+        KeyEvent_t evt = Key_Scan();
+        if (evt != KEY_EVENT_NONE)
+        {
+            key_state = evt;
+        }
 
-        OLED_ShowFloat(&oled_ctx, 0, 32, temp, 2);
-        OLED_ShowFloat(&oled_ctx, 0, 48, humi, 2);
-        
-        OLED_Refresh(&oled_ctx);
+
+        // 非阻塞调度
+        if (now_tick - oled_last_tick  >= 1000)
+        {
+            oled_last_tick  = now_tick;
+            SHT30_Read(&sht30_ctx, &temp, &humi);
+
+            OLED_Clear(&oled_ctx);
+
+            OLED_ShowNum(&oled_ctx, 0, 0, HAL_GetTick() / 1000, 0);
+
+            OLED_ShowString(&oled_ctx, 0, 32, "Temp:");
+            OLED_ShowFloat(&oled_ctx, 40, 32, temp, 2);
+            OLED_ShowString(&oled_ctx, 0, 48, "Humi:");
+            OLED_ShowFloat(&oled_ctx, 40, 48, humi, 2);
+
+            OLED_ShowNum(&oled_ctx, 0, 16, key_state, 0);
+
+            OLED_Refresh(&oled_ctx);
+        }
+
+        // 高温高湿报警
+        if (temp > temp_max || humi > humi_max)
+            LED_On();
+        else
+            LED_Off();
+
+
 
     /* USER CODE END WHILE */
 
