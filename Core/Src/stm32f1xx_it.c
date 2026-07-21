@@ -213,5 +213,8 @@ void USART1_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-
+void PVD_IRQHandler(void)
+{
+    HAL_PWR_PVD_IRQHandler();
+}
 /* USER CODE END 1 */
