@@ -11,6 +11,7 @@
  */
 #include "env_monitor.h"
 #include "param_manager.h"
+#include "key_handler.h"
 
 static EnvData_t s_data = {0};
 static OLED_Ctx *s_oled_ctx = NULL;
@@ -33,6 +34,8 @@ uint8_t EnvMonitor_Update(uint32_t now_tick)
     // key_handler按键调阈值会实时改动s_param，每次显示前重新取，
     // 保证OLED上显示的永远是当前最新值，不是开机那一刻的旧值
     const ThresholdParam_t *param = Param_GetHandle();
+    // 菜单选择时，对应阈值区域反色，枚举量
+    const ParamField_t field = KeyHandler_GetSelectedField();
 
     SHT30_Read(s_sht30_ctx, &s_data.temp, &s_data.humi);
 
@@ -52,6 +55,18 @@ uint8_t EnvMonitor_Update(uint32_t now_tick)
     OLED_ShowFloat(s_oled_ctx, 40, 32, s_data.temp, 2);
     OLED_ShowString(s_oled_ctx, 0, 48, "Humi:");
     OLED_ShowFloat(s_oled_ctx, 40, 48, s_data.humi, 2);
+
+    // 阈值选择反色
+    if (field == PARAM_FIELD_TEMP_LOW)
+        OLED_InvertRect(s_oled_ctx, 16, 0, 24, 16);
+    else if (field == PARAM_FIELD_TEMP_HIGH)
+        OLED_InvertRect(s_oled_ctx, 56, 0, 24, 16);
+    else if (field == PARAM_FIELD_HUMI_LOW)
+        OLED_InvertRect(s_oled_ctx, 16, 16, 24, 16);
+    else if (field == PARAM_FIELD_HUMI_HIGH)
+        OLED_InvertRect(s_oled_ctx, 56, 16, 24, 16);
+
+
 
     OLED_Refresh(s_oled_ctx);
 

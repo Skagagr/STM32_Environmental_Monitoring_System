@@ -463,6 +463,46 @@ uint8_t OLED_ShowFloat(OLED_Ctx *ctx, uint8_t x, uint8_t y, float num, uint8_t d
 }
 
 /**
+ * @brief 反色显示指定矩形区域(按页对齐)
+ *
+ * @details
+ *  将区域内 GRAM 字节按位取反，实现背景/文字亮灭互换。
+ *  要求 y 和 h 必须是 8 的整数倍(按页对齐)，否则返回失败。
+ *
+ * @param ctx   OLED 上下文指针
+ * @param x     左上角列，0~127
+ * @param y     左上角行，必须是 8 的倍数
+ * @param w     宽度(像素)
+ * @param h     高度(像素)，必须是 8 的倍数
+ * @return 1    成功
+ * @return 0    参数非法或未按页对齐
+ */
+uint8_t OLED_InvertRect(OLED_Ctx *ctx, uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
+    if (ctx == NULL || !ctx->inited)
+        return 0;
+    if ((y % 8) != 0 || (h % 8) != 0)
+        return 0;
+    if (x >= OLED_WIDTH || (uint16_t)(x + w) > OLED_WIDTH)
+        return 0;
+    if (y >= OLED_HEIGHT || (uint16_t)(y + h) > OLED_HEIGHT)
+        return 0;
+
+    uint8_t page_start = y / 8;
+    uint8_t page_count = h / 8;
+
+    for (uint8_t p = page_start; p < page_start + page_count; p++)
+    {
+        for (uint8_t col = x; col < x + w; col++)
+        {
+            ctx->gram[p][col] = (uint8_t)(~ctx->gram[p][col]);
+        }
+    }
+
+    return 1;
+}
+
+/**
  * -----------------------------------------------------------------------------
  * CubeMX 配置说明
  * -----------------------------------------------------------------------------

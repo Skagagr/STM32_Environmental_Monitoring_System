@@ -28,11 +28,11 @@
 #include "oled.h"
 #include "sht30.h"
 #include "led.h"
-#include "key.h"
 #include "param_manager.h"
 #include "power_monitor.h"
 #include "env_monitor.h"
 #include "alarm_ctrl.h"
+#include "key_handler.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -112,6 +112,7 @@ int main(void)
     // 打开掉电检测，开启PVD掉电检测中断
     Power_Monitor_Init();
 
+
     EnvMonitor_Init(&sht30_ctx, &oled_ctx);
 
 
@@ -123,17 +124,7 @@ int main(void)
     {
         now_tick = HAL_GetTick();
 
-
-        // 按键扫描(内部已消抖,直接调用即可)
-        KeyEvent_t evt = Key_Scan();
-        if (evt != KEY_EVENT_NONE)
-        {
-            if (evt == KEY_EVENT_PLUS)
-                Param_AdjustTempHigh(3);
-            if (evt == KEY_EVENT_MINUS)
-                Param_AdjustTempHigh(-3);
-        }
-
+        Key_Update();
 
         // 非阻塞调度
         if (EnvMonitor_Update(now_tick))

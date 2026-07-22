@@ -43,6 +43,19 @@ typedef struct
 } ThresholdParam_t;
 
 /**
+ * @brief 阈值设置参数字段编号
+ * @note  用于按键菜单界面选择时，oled显示的阈值参数位置反色处理
+ */
+typedef enum
+{
+    PARAM_FIELD_NONE = 0,
+    PARAM_FIELD_TEMP_LOW,
+    PARAM_FIELD_TEMP_HIGH,
+    PARAM_FIELD_HUMI_LOW,
+    PARAM_FIELD_HUMI_HIGH
+} ParamField_t;
+
+/**
  * @brief 模块初始化，扫描 Flash 用户页恢复最后一条有效阈值记录到 RAM
  * @details 扫描规则：
  *          - 逐条记录顺序向后扫描，magic == 0xFFFF 视为空白，停止扫描
