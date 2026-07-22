@@ -32,6 +32,7 @@
 #include "param_manager.h"
 #include "power_monitor.h"
 #include "env_monitor.h"
+#include "alarm_ctrl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -140,9 +141,7 @@ int main(void)
             const EnvData_t *env = EnvMonitor_GetData();
             const ThresholdParam_t *param = Param_GetHandle();
 
-
-
-            if (env->temp > param->temp_high || env->humi > param->humi_high)
+            if (AlarmCtrl_Update(env->temp, env->humi, param->temp_low, param->temp_high, param->humi_low, param->humi_high))
                 LED_On();
             else
                 LED_Off();
