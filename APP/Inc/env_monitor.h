@@ -14,6 +14,7 @@
 
 #include "sht30.h"
 #include "oled.h"
+#include "key_handler.h"
 
 
 /**
@@ -35,10 +36,11 @@ void EnvMonitor_Init(SHT30_Ctx *sht30_ctx, OLED_Ctx *oled_ctx);
 /**
  * @brief 读取温湿度并刷新OLED
  * @param now_tick 当前系统tick，用于判断是否到达1秒刷新周期
+ * @param field    当前阈值菜单状态
  * @return 1 本次真正执行了刷新
  * @return 0 未到刷新周期，本次未刷新
  */
-uint8_t EnvMonitor_Update(uint32_t now_tick);
+uint8_t EnvMonitor_Update(uint32_t now_tick, ParamField_t field);
 
 /**
  * @brief 获取最新温湿度

@@ -11,7 +11,6 @@
  */
 #include "env_monitor.h"
 #include "param_manager.h"
-#include "key_handler.h"
 
 static EnvData_t s_data = {0};
 static OLED_Ctx *s_oled_ctx = NULL;
@@ -24,7 +23,7 @@ void EnvMonitor_Init(SHT30_Ctx *sht30_ctx, OLED_Ctx *oled_ctx)
     s_oled_ctx = oled_ctx;
 }
 
-uint8_t EnvMonitor_Update(uint32_t now_tick)
+uint8_t EnvMonitor_Update(uint32_t now_tick, ParamField_t field)
 {
     if (now_tick - s_last_tick < 1000)
         return 0;
@@ -34,8 +33,6 @@ uint8_t EnvMonitor_Update(uint32_t now_tick)
     // key_handler按键调阈值会实时改动s_param，每次显示前重新取，
     // 保证OLED上显示的永远是当前最新值，不是开机那一刻的旧值
     const ThresholdParam_t *param = Param_GetHandle();
-    // 菜单选择时，对应阈值区域反色，枚举量
-    const ParamField_t field = KeyHandler_GetSelectedField();
 
     SHT30_Read(s_sht30_ctx, &s_data.temp, &s_data.humi);
 

@@ -126,8 +126,9 @@ int main(void)
 
         Key_Update();
 
+        ParamField_t selected = KeyHandler_GetSelectedField();
         // 非阻塞调度
-        if (EnvMonitor_Update(now_tick))
+        if (EnvMonitor_Update(now_tick, selected))
         {
             const EnvData_t *env = EnvMonitor_GetData();
             const ThresholdParam_t *param = Param_GetHandle();
