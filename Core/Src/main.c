@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "iwdg.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -100,6 +101,7 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
     I2C_Bus_Init(&i2c1_ctx, &hi2c1);
     OLED_Init(&oled_ctx, &i2c1_ctx);
@@ -137,8 +139,16 @@ int main(void)
                 LED_Off();
         }
 
-
-
+        // -------喂狗函数-------
+        // IWDG（独立看门狗，Independent Watchdog）
+        // 挂在独立的低速内部时钟（LSI，约40kHz）上，跟主时钟系统完全独立
+        // 超时时间 = (Prescaler × Reload) / 40000(LSI) 秒
+        // Prescaler = 64
+        // Reload    = 1250
+        // 超时时间 2 秒
+        // 上面的程序常态运行时间在325ms左右，光oled刷新就耗费306ms
+        // -------6倍余量，超时时间2秒绰绰有余-------
+        HAL_IWDG_Refresh(&hiwdg);
 
 
     /* USER CODE END WHILE */
@@ -160,10 +170,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
