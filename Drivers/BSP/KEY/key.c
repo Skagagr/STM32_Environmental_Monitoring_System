@@ -39,7 +39,7 @@ static const KeyMap_t key_map[] =
 #define KEY_SCAN_INTERVAL   20
 
 // 上一次调用 Key_Scan() 的时间戳，用来判断"是否已经过了20ms"
-static uint32_t last_tick = 0;
+static uint32_t s_last_tick = 0;
 
 // 记录每个按键"上一次扫描到的电平状态"，用于边沿检测
 // 数组大小 = 按键数量，每个按键各自独立记录一份
@@ -58,10 +58,10 @@ KeyEvent_t Key_Scan(void)
     // ------- 第一步：限流，控制多久才真正扫描一次 -------
     // 如果距离上次扫描还没到20ms，直接返回"无事件"，不做任何电平读取
     // 目的：给按键足够的时间让抖动结束，避免抖动期间反复触发
-    if (now_tick - last_tick < KEY_SCAN_INTERVAL)
+    if (now_tick - s_last_tick < KEY_SCAN_INTERVAL)
         return KEY_EVENT_NONE;
     // 到了20ms，更新时间戳，准备进行本次扫描
-    last_tick = now_tick;
+    s_last_tick = now_tick;
 
     // ------- 第二步：依次检查4个按键 -------
     for (uint8_t i = 0; i < KEY_COUNT; i++)

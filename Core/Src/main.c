@@ -31,6 +31,7 @@
 #include "key.h"
 #include "param_manager.h"
 #include "power_monitor.h"
+#include "env_monitor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -75,8 +76,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-    float temp, humi;
-    static uint32_t oled_last_tick  = 0;
     uint32_t now_tick = 0;
 
   /* USER CODE END 1 */
@@ -107,20 +106,12 @@ int main(void)
     OLED_Init(&oled_ctx, &i2c1_ctx);
     SHT30_Init(&sht30_ctx, &i2c1_ctx);
 
-    /* 第一步：先恢复阈值。必须在打开PVD中断之前完成——
-   如果顺序反了（先调Power_Monitor_Init打开PVD中断，再调Param_Init），
-   万一在这两行之间真的发生了掉电（概率虽然极小，但不是不可能），
-   HAL_PWR_PVDCallback()里会调用Param_Save()，而这时s_param和
-   s_next_write_addr都还是未初始化的垃圾值——存进Flash的会是一条
-   完全无意义的数据，把之前保存的有效记录污染掉 */
+    // 恢复阈值。必须在打开PVD中断之前完成
     Param_Init();
-
-    /* 第二步：阈值恢复完成、RAM状态确定之后，再打开掉电检测。
-       这一行执行完，PVD中断随时可能触发——也就是说从这里开始，
-       写在它后面的任何代码，都要假设"这一行跑完，下一行可能因为
-       掉电根本没机会执行"，这是你们文档里"确定性完成"这个设计
-       要求会一直延续下去的地方 */
+    // 打开掉电检测，开启PVD掉电检测中断
     Power_Monitor_Init();
+
+    EnvMonitor_Init(&sht30_ctx, &oled_ctx);
 
 
   /* USER CODE END 2 */
@@ -144,42 +135,14 @@ int main(void)
 
 
         // 非阻塞调度
-        if (now_tick - oled_last_tick  >= 1000)
+        if (EnvMonitor_Update(now_tick))
         {
-            oled_last_tick  = now_tick;
-            SHT30_Read(&sht30_ctx, &temp, &humi);
-
-            /* 每次刷新前都重新取一次句柄，而不是缓存成外层长期持有的变量——
-          以后key_handler按键调阈值会实时改动s_param，每次显示前重新取，
-          才能保证OLED上显示的永远是当前最新值，不是开机那一刻的旧值 */
+            const EnvData_t *env = EnvMonitor_GetData();
             const ThresholdParam_t *param = Param_GetHandle();
 
-            OLED_Clear(&oled_ctx);
-
-            /* 原来这行(y=0)是开机计时，现在换成温度阈值范围 */
-            OLED_ShowString(&oled_ctx, 0, 0, "T:");
-            OLED_ShowNum(&oled_ctx, 16, 0, param->temp_low, 0);
-            OLED_ShowString(&oled_ctx, 40, 0, "-");
-            OLED_ShowNum(&oled_ctx, 48, 0, param->temp_high, 0);
-
-            /* 原来这行(y=16)是按键状态，现在换成湿度阈值范围 */
-            OLED_ShowString(&oled_ctx, 0, 16, "H:");
-            OLED_ShowNum(&oled_ctx, 16, 16, param->humi_low, 0);
-            OLED_ShowString(&oled_ctx, 40, 16, "-");
-            OLED_ShowNum(&oled_ctx, 48, 16, param->humi_high, 0);
-
-            OLED_ShowString(&oled_ctx, 0, 32, "Temp:");
-            OLED_ShowFloat(&oled_ctx, 40, 32, temp, 2);
-            OLED_ShowString(&oled_ctx, 0, 48, "Humi:");
-            OLED_ShowFloat(&oled_ctx, 40, 48, humi, 2);
-
-            OLED_Refresh(&oled_ctx);
 
 
-            /* 报警判断改成读真实阈值，不再用写死的temp_max/humi_max。
-           这段逻辑长期看应该按你们文档里的分层设计搬进alarm_ctrl.c，
-           不该一直留在main.c里，先接上验证显示效果 */
-            if (temp > param->temp_high || humi > param->humi_high)
+            if (env->temp > param->temp_high || env->humi > param->humi_high)
                 LED_On();
             else
                 LED_Off();
