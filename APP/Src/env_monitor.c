@@ -34,7 +34,7 @@ uint8_t EnvMonitor_Update(uint32_t now_tick, ParamField_t field)
     // 保证OLED上显示的永远是当前最新值，不是开机那一刻的旧值
     const ThresholdParam_t *param = Param_GetHandle();
 
-    SHT30_Read(s_sht30_ctx, &s_data.temp, &s_data.humi);
+    SHT30_Read(s_sht30_ctx, &s_data.temp, &s_data.humi);    // 运行时间 16 ms
 
     OLED_Clear(s_oled_ctx);
 
@@ -65,6 +65,11 @@ uint8_t EnvMonitor_Update(uint32_t now_tick, ParamField_t field)
 
 
 
+    // -------运行时间 306 ms-------
+    // 原因 每字节独立一帧发送
+    // 刷新一屏总共要发起 8页 × (3条命令 + 128个数据字节) = 8 × 131 = 1048 次独立的 I2C 传输
+    // 每次只发2个字节，但每次都要完整走一遍 START→地址+ACK→数据→ACK→STOP 的完整I2C帧
+    // -------未来预计把逐字节发送改成一次性打包发送一整页-------
     OLED_Refresh(s_oled_ctx);
 
     return 1;
