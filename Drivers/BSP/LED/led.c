@@ -7,6 +7,7 @@
  * @version 1.0.0
  * @date    2026/7/17
  */
+#include "main.h"
 #include "led.h"
 
 /**

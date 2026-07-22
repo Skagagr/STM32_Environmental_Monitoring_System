@@ -7,10 +7,8 @@
  * @version 1.0.0
  * @date    2026/7/17
  */
-#ifndef __KEY_H
-#define __KEY_H
-
-#include "main.h"
+#ifndef KEY_H
+#define KEY_H
 
 /**
  * @brief 按键事件类型

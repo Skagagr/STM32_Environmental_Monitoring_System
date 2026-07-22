@@ -25,8 +25,8 @@
  * @version 1.2.0
  * @date    2026-07-14
  */
-#ifndef __I2C_BUS_H
-#define __I2C_BUS_H
+#ifndef I2C_BUS_H
+#define I2C_BUS_H
 
 #include "main.h"
 #include <stdint.h>

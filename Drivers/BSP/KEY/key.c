@@ -8,6 +8,7 @@
  * @date    2026/7/17
  */
 #include "key.h"
+#include "main.h"
 
 /**
  * @brief 按键映射表的每一项：一个引脚 对应 一个按键事件

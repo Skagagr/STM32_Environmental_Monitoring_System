@@ -15,8 +15,8 @@
  * @date    2026-07-14
  */
 
-#ifndef __FONT_H
-#define __FONT_H
+#ifndef FONT_H
+#define FONT_H
 
 #include <stdint.h>
 

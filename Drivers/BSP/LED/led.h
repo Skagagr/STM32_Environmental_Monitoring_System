@@ -7,10 +7,8 @@
  * @version 1.0.0
  * @date    2026/7/17
  */
-#ifndef __LED_H
-#define __LED_H
-
-#include "main.h"
+#ifndef LED_H
+#define LED_H
 
 /**
  * @brief 打开 LED

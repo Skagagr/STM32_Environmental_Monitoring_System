@@ -9,8 +9,8 @@
  * @version 1.1.0
  * @date    2026-07-17
  */
-#ifndef __SHT30_H
-#define __SHT30_H
+#ifndef SHT30_H
+#define SHT30_H
 
 #include "i2c_bus.h"
 

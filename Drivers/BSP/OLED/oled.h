@@ -35,12 +35,11 @@
  * @version 1.3.0
  * @date    2026-07-15
  */
-#ifndef __OLED_H
-#define __OLED_H
+#ifndef OLED_H
+#define OLED_H
 
 #include "main.h"
 #include "i2c_bus.h"
-#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
