@@ -16,8 +16,8 @@
  * @version 1.0.0
  * @date    2026/7/20
  */
-#ifndef __POWER_MONITOR_H
-#define __POWER_MONITOR_H
+#ifndef POWER_MONITOR_H
+#define POWER_MONITOR_H
 
 /**
  * @brief  配置PVD外设：使能PWR时钟、设置检测电压阈值、配置中断触发方式、

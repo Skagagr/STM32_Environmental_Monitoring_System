@@ -15,8 +15,8 @@
  * @version 1.0.0
  * @date    2026/7/19
  */
-#ifndef __PARAM_MANAGER_H
-#define __PARAM_MANAGER_H
+#ifndef PARAM_MANAGER_H
+#define PARAM_MANAGER_H
 
 #include <stdint.h>
 

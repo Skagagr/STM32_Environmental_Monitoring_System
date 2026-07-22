@@ -9,8 +9,8 @@
  * @version 1.0.0
  * @date    2026/7/22
  */
-#ifndef __ENV_MONITOR_H
-#define __ENV_MONITOR_H
+#ifndef ENV_MONITOR_H
+#define ENV_MONITOR_H
 
 #include "sht30.h"
 #include "oled.h"
