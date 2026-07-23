@@ -1,64 +1,98 @@
-# STM32 Environmental Monitoring System
+# STM32 环境监测系统
 
-## 基于 STM32 与 Qt 的嵌入式环境监测系统
-
-## 项目简介
-
-本项目是一个基于 STM32 的嵌入式环境监测系统。
-
-系统通过温湿度传感器采集环境数据，并通过 OLED 显示，同时支持按键设置参数、LED报警以及通过 UART 与 Qt 上位机进行通信。
-
-项目主要用于学习嵌入式系统开发，包括外设驱动、数据通信、设备交互以及上位机开发。
-
----
+基于 STM32F103C8T6 的嵌入式环境监测系统，通过 SHT30 传感器采集温湿度数据，OLED 实时显示，支持四按键设置报警阈值，超出阈值时 LED 报警。
 
 ## 硬件平台
 
-- STM32 MCU
-- SHT30 温湿度传感器
-- OLED 显示模块
-- W25Qxx Flash存储
-- 按键输入
-- LED报警模块
+| 模块 | 型号/说明 |
+|------|----------|
+| MCU | STM32F103C8T6 (LQFP48) |
+| 温湿度传感器 | SHT30 (I2C) |
+| 显示屏 | OLED SSD1315 128×64 (I2C) |
+| 按键 | 4 个独立按键 (MENU / + / - / ENTER) |
+| 报警 | LED |
+| 存储 | STM32 内部 Flash (阈值参数掉电保存) |
 
----
+## 软件架构
 
-## 软件环境
+```
+├── Core/                  # STM32CubeMX 生成的 HAL 代码
+│   ├── Inc/               #   外设初始化头文件
+│   └── Src/               #   main.c, i2c.c 等
+├── Drivers/
+│   ├── Bus/I2C/           # I2C 总线抽象层
+│   ├── BSP/               # 板级支持包
+│   │   ├── OLED/          #   OLED 驱动 (含 ASCII 字库)
+│   │   ├── SHT30/         #   SHT30 温湿度传感器驱动
+│   │   ├── LED/           #   LED 驱动
+│   │   ├── KEY/           #   按键消抖与事件检测
+│   │   └── FLASH/         #   内部 Flash 读写
+│   ├── CMSIS/             # ARM CMSIS 核心头文件
+│   └── STM32F1xx_HAL_Driver/  # STM32F1 HAL 库
+├── APP/                   # 应用层
+│   ├── Inc/
+│   │   ├── env_monitor.h      # 环境监测模块 (周期采集 + OLED 刷新)
+│   │   ├── alarm_ctrl.h       # 报警逻辑 (纯判断，与硬件解耦)
+│   │   ├── key_handler.h      # 按键状态机 (菜单/加减/确认)
+│   │   ├── param_manager.h    # 阈值管理 (RAM + Flash 持久化)
+│   │   └── power_monitor.h    # PVD 掉电检测 (断电前保存阈值)
+│   └── Src/               #   对应 .c 实现
+├── cmake/                 # CMake 子项目 (STM32CubeMX 生成)
+└── build/                 # 构建输出
+```
 
-- STM32CubeMX
-- CMake 工程
-- C语言
-- Qt / C++
+## 外设配置
 
----
+| 外设 | 用途 | 配置 |
+|------|------|------|
+| I2C1 | SHT30 + OLED 通信 | 标准模式 |
+| IWDG | 独立看门狗 | 64 预分频 / 1250 重载 ≈ 2 秒超时 |
+| PVD | 掉电检测 | 2.9V 阈值，下降沿中断 |
 
-## 主要功能
+## 功能说明
 
-计划实现：
+### 环境监测
+上电后每秒自动采集温湿度数据并刷新 OLED 显示。显示内容包括当前温度、湿度和四个报警阈值。
 
-- 温湿度数据采集
-- OLED数据显示
-- 参数设置与保存
-- 阈值报警
-- UART通信
-- Qt上位机监控
+### 阈值设置
+通过四按键操作调节报警阈值：
 
----
+- **MENU** — 循环切换选中字段 (温度下限 → 温度上限 → 湿度下限 → 湿度上限)
+- **+ / -** — 对选中字段调节 ±3 单位
+- **ENTER** — 退出调节模式
 
-## 开发进度
+### 报警
+当前温湿度任一超出对应阈值范围时，LED 点亮报警；全部正常时 LED 熄灭。
 
-- [x] 项目规划
-- [ ] STM32基础工程搭建
-- [ ] 外设驱动开发
-- [ ] 裸机功能实现
-- [ ] Qt上位机开发
-- [ ] FreeRTOS移植
+### 掉电保存
+利用 STM32 内部 Flash 最后一页存储阈值参数。正常运行期间仅在 RAM 中修改阈值，系统掉电时通过 PVD 中断自动写入 Flash，避免频繁擦写。
 
----
+### 看门狗
+IWDG 独立看门狗提供约 2 秒超时保护，主循环内喂狗，程序异常时可自动复位。
 
-## 后续计划
+## 构建
 
-- 完善裸机版本功能
-- 优化代码结构
-- 增加RTOS任务管理
-- 完善上位机交互
+```bash
+# 使用 CMake + ARM GCC 工具链
+cmake -B build/Debug -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_TOOLCHAIN_FILE=<arm-gcc-toolchain>.cmake
+cmake --build build/Debug
+```
+
+需要安装 `arm-none-eabi-gcc` 工具链和 CMake ≥ 3.22。
+
+## 引脚分配
+
+| 引脚 | 功能 |
+|------|------|
+| PB6 | I2C1 SCL (SHT30 + OLED) |
+| PB7 | I2C1 SDA (SHT30 + OLED) |
+| PA0 | 按键 MENU (上拉输入) |
+| PA1 | 按键 PLUS (上拉输入) |
+| PA2 | 按键 MINUS (上拉输入) |
+| PA3 | 按键 ENTER (上拉输入) |
+| PB0 | LED 报警输出 |
+
+## 许可
+
+MIT License
