@@ -12,7 +12,7 @@
 | 按键 | 4 个独立按键 (MENU / + / - / ENTER) |
 | 报警 | LED |
 | 存储 | STM32 内部 Flash (阈值参数掉电保存) |
-- **需要在STM32的3.3V与GND之间外接一颗10Fu电容，用于掉电存储的储能**
+- **需要在STM32的3.3V与GND之间外接一颗10uF电容，用于掉电存储的储能**
 
 ## 软件架构
 
@@ -71,16 +71,17 @@
 ### 看门狗
 IWDG 独立看门狗提供约 2 秒超时保护，主循环内喂狗，程序异常时可自动复位。
 
-## 构建
+## 设计说明
 
-```bash
-# 使用 CMake + ARM GCC 工具链
-cmake -B build/Debug -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_TOOLCHAIN_FILE=<arm-gcc-toolchain>.cmake
-cmake --build build/Debug
-```
+- **报警逻辑解耦**：alarm_ctrl 仅做阈值判断、输出报警状态，不直接操作 LED，便于后续扩展蜂鸣器、上报云端等其他报警方式
+- **Flash 延迟写入**：阈值仅在系统掉电时通过 PVD 中断写入 Flash，运行期间只修改 RAM，避免频繁擦写造成的寿命损耗和主循环阻塞
+- **I2C 总线抽象层**：将 SHT30 与 OLED 的 I2C 读写封装在 Bus/I2C 层，两个外设驱动均基于统一接口通信，便于后续扩展其他 I2C 设备
+- **按键状态机设计**：MENU/+/-/ENTER 四键通过状态机管理选中字段与调节模式，避免多按键交互时的逻辑耦合，便于后续扩展长按连续调节等功能
 
-需要安装 `arm-none-eabi-gcc` 工具链和 CMake ≥ 3.22。
+## 开发环境
+
+使用 STM32CubeMX 生成初始工程，通过 CLion + ARM GCC 工具链进行开发与编译。
+烧录使用 ST-Link
 
 ## 引脚分配
 
