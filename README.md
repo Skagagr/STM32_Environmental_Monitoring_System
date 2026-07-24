@@ -2,6 +2,11 @@
 
 基于 STM32F103C8T6 的嵌入式环境监测系统，通过 SHT30 传感器采集温湿度数据，OLED 实时显示，支持四按键设置报警阈值，超出阈值时 LED 报警。
 
+## 实物图
+<p align="center">
+  <img src="docs/images/device_photo.webp" width="500">
+</p>
+
 ## 硬件平台
 
 | 模块 | 型号/说明 |
@@ -12,7 +17,12 @@
 | 按键 | 4 个独立按键 (MENU / + / - / ENTER) |
 | 报警 | LED |
 | 存储 | STM32 内部 Flash (阈值参数掉电保存) |
-- **需要在STM32的3.3V与GND之间外接一颗10uF电容，用于掉电存储的储能**
+- **需要在STM32的3.3V与GND之间外接一颗470uF电容，用于掉电存储的储能**
+
+## 电路原理图
+<p align="center">
+  <img src="docs/images/schematic.webp" width="500">
+</p>
 
 ## 软件架构
 
@@ -39,7 +49,8 @@
 │   │   └── power_monitor.h    # PVD 掉电检测 (断电前保存阈值)
 │   └── Src/               #   对应 .c 实现
 ├── cmake/                 # CMake 子项目 (STM32CubeMX 生成)
-└── build/                 # 构建输出
+└── docs/
+    └── images/             # 实物图、电路原理图
 ```
 
 ## 外设配置
